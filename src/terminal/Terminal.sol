@@ -123,6 +123,9 @@ contract Terminal is Ownable, ReentrancyGuard {
         Pool storage p = _pool(isLp);
         IERC20 token = _stakeToken(isLp);
 
+        // Sweep before the stake lands, so anything that arrived while the pool was empty is
+        // already queued and the _flushQueued below starts it against this very stake.
+        _sweepSplitter();
         _updateReward(p, msg.sender);
 
         token.safeTransferFrom(msg.sender, address(this), amount);
@@ -141,6 +144,7 @@ contract Terminal is Ownable, ReentrancyGuard {
         Pool storage p = _pool(isLp);
         if (p.balanceOf[msg.sender] < amount) revert InsufficientStake();
 
+        _sweepSplitter();
         _updateReward(p, msg.sender);
 
         p.totalStaked -= amount;
@@ -153,6 +157,8 @@ contract Terminal is Ownable, ReentrancyGuard {
     /// @notice Claim accrued rewards at any time, without touching the stake.
     function claim(bool isLp) public nonReentrant returns (uint256 reward) {
         Pool storage p = _pool(isLp);
+
+        _sweepSplitter();
         _updateReward(p, msg.sender);
 
         reward = p.rewards[msg.sender];
@@ -181,10 +187,20 @@ contract Terminal is Ownable, ReentrancyGuard {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Pull whatever the splitter owes this contract and start streaming it.
-    /// @dev Permissionless by design — the Terminal is unstaffed, so nobody's cooperation should be
-    ///      required for revenue to reach stakers. Claiming from the splitter only ever moves value
-    ///      to the address it was already earmarked for.
+    /// @dev Kept external for keepers and monitoring, but no operator is expected to call it: every
+    ///      staking entrypoint sweeps first, so revenue reaches the streams as a side effect of
+    ///      ordinary use. Reverts when there is nothing to move so a keeper gets a clear signal;
+    ///      the internal sweep is silent for the same case.
     function pullRewards() external nonReentrant returns (uint256 stakerAmount, uint256 lpAmount) {
+        (stakerAmount, lpAmount) = _sweepSplitter();
+        if (stakerAmount == 0 && lpAmount == 0) revert NothingPulled();
+    }
+
+    /// @dev Moves both earmarked buckets out of the splitter and into the streams. Silent when
+    ///      there is nothing waiting, so it can sit at the top of every entrypoint without turning
+    ///      an ordinary stake into a revert. Claiming from the splitter only ever moves value to
+    ///      the address it was already earmarked for, so there is nothing to authorise.
+    function _sweepSplitter() private returns (uint256 stakerAmount, uint256 lpAmount) {
         address asset = address(REWARD_TOKEN);
 
         if (SPLITTER.accrued(asset, RevenueSplitter.Bucket.Stakers) > 0) {
@@ -195,7 +211,6 @@ contract Terminal is Ownable, ReentrancyGuard {
             lpAmount = SPLITTER.claim(asset, RevenueSplitter.Bucket.Lps);
             _notify(_lpPool, true, lpAmount);
         }
-        if (stakerAmount == 0 && lpAmount == 0) revert NothingPulled();
     }
 
     /// @dev Starts or extends a stream. If nothing is staked the amount is held aside rather than

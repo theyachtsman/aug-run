@@ -459,4 +459,86 @@ contract DropTest is Test {
         vm.expectRevert();
         drop.setVenue(address(venue));
     }
+
+    /*//////////////////////////////////////////////////////////////
+                        ONE BUTTON COLLECTS EVERYTHING
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Collecting must be a single act however many units you hold — three units, one call,
+    ///      three token-bound wallets funded.
+    function test_claimMany_collectsEveryUnitInOneCall() public {
+        uint256 a = _unitWithBay(alice, T3_NVDA);
+        uint256 b = _unitWithBay(alice, T3_NVDA);
+        uint256 c = _unitWithBay(alice, T3_NVDA);
+        runner.advanceCycles(1);
+        _deliverRevenue(1000e18);
+        uint256 dropId = _runDrop();
+
+        uint256[] memory ids = new uint256[](3);
+        (ids[0], ids[1], ids[2]) = (a, b, c);
+
+        (address[3] memory assets,) = drop.claimable(dropId, a);
+
+        vm.prank(alice);
+        uint256 collected = drop.claimMany(dropId, ids);
+
+        assertEq(collected, 3, "all three collected");
+        for (uint256 i = 0; i < 3; i++) {
+            assertGt(
+                IERC20(assets[0]).balanceOf(runner.tokenBoundAccount(ids[i])),
+                0,
+                "each unit's own wallet was funded"
+            );
+            assertTrue(drop.claimed(dropId, ids[i]), "marked collected");
+        }
+    }
+
+    /// @dev One button has to work whatever it is handed. A unit that is not yours, or is already
+    ///      collected, must be skipped — not revert and strand everything else in the list.
+    function test_claimMany_skipsRatherThanReverts() public {
+        uint256 mine = _unitWithBay(alice, T3_NVDA);
+        uint256 alsoMine = _unitWithBay(alice, T3_NVDA);
+        uint256 theirs = _unitWithBay(bob, T3_NVDA);
+        runner.advanceCycles(1);
+        _deliverRevenue(1000e18);
+        uint256 dropId = _runDrop();
+
+        // Collect one on its own first, so the batch contains an already-claimed unit too.
+        vm.prank(alice);
+        drop.claim(dropId, mine);
+
+        uint256[] memory ids = new uint256[](3);
+        (ids[0], ids[1], ids[2]) = (mine, theirs, alsoMine);
+
+        vm.prank(alice);
+        uint256 collected = drop.claimMany(dropId, ids);
+
+        assertEq(collected, 1, "only the one outstanding unit of alice's was collected");
+        assertTrue(drop.claimed(dropId, alsoMine), "the collectable one went through");
+        assertFalse(drop.claimed(dropId, theirs), "bob's was skipped, not taken");
+    }
+
+    function test_claimMany_respectsPhaseAndWindow() public {
+        uint256 id = _unitWithBay(alice, T3_NVDA);
+        runner.advanceCycles(1);
+        _deliverRevenue(1000e18);
+
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = id;
+
+        // Before the round is finalised there is nothing to hand over.
+        uint256 dropId = drop.openDrop();
+        vm.prank(alice);
+        vm.expectRevert(Drop.WrongPhase.selector);
+        drop.claimMany(dropId, ids);
+
+        while (!drop.accumulate(dropId, 50)) {}
+        drop.finalize(dropId);
+
+        (,,,,, uint256 deadline,) = drop.rounds(dropId);
+        vm.warp(deadline + 1);
+        vm.prank(alice);
+        vm.expectRevert(Drop.ClaimWindowClosed.selector);
+        drop.claimMany(dropId, ids);
+    }
 }

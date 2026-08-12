@@ -115,9 +115,39 @@ src/runner/         Stock//Runner ERC-721, cycles, TBA (phase 2)
 src/items/          Augments, Modules, Ripperdoc       (phase 3)
 script/             Foundry deploy scripts
 bin/deploy.sh       deploy wrapper — sources the key from ~/.aug_run/.env
-test/               Foundry tests (163 passing)
+bin/run-drop.sh     Drop keeper — fires the weekly Drop on a schedule
+test/               Foundry tests (345 passing)
+site/               production point-and-click game on :3000 (Next.js)
 ui/                 test harness on :3333 (Vite + React + wagmi/viem)
 ```
+
+## Running the Drop
+
+Firing a Drop is three on-chain steps and cannot be fewer: 333 units' weights will not fit in one
+transaction, and the aggregate purchase can only happen once every weight is known. That is
+operations, not gameplay — an operator at the Courier's window presses **one** button to collect,
+and never sees the machinery.
+
+```bash
+bin/run-drop.sh --status   # where is the current Drop?
+bin/run-drop.sh --dry      # report state, broadcast nothing
+bin/run-drop.sh            # open, weigh and buy
+```
+
+Cron it once a cycle, a few minutes past the boundary:
+
+```
+5 0 * * 1  cd /path/to/aug_run && bin/run-drop.sh >> ~/.aug_run/drop.log 2>&1
+```
+
+It is safe to re-run: each step is skipped if the round is already past it, so a re-run after a
+failure resumes rather than restarting. The steps are permissionless — weights are read off the
+Stock//Runners themselves and never supplied, so whoever runs it chooses only *when* a Drop happens,
+never who earns from it. It needs `DROP_ADDRESS` in `~/.aug_run/.env`.
+
+The Terminal needs no equivalent. Revenue used to require someone to call `pullRewards()`; it now
+sweeps itself into the streams on every stake, claim and withdraw, so there is nothing to run and
+nothing to press.
 
 ## Where the rules live
 

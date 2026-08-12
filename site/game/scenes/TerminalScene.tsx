@@ -1,9 +1,16 @@
 'use client';
 
 import {useState} from 'react';
-import {useAccount, useReadContracts} from 'wagmi';
+import {useAccount, useBalance, useReadContracts} from 'wagmi';
 import {addresses} from '@/lib/addresses';
-import {TerminalAbi, AUGAbi, MockLpTokenAbi, RevenueSplitterAbi} from '@/lib/generated/abis';
+import {
+  TerminalAbi,
+  AUGAbi,
+  RUNAbi,
+  MockUSDGAbi,
+  MockLpTokenAbi,
+  RevenueSplitterAbi,
+} from '@/lib/generated/abis';
 import {useTx} from '@/lib/tx';
 import {fmt} from '@/lib/format';
 import {line} from '../vendors';
@@ -21,7 +28,6 @@ const MAX_UINT = 2n ** 256n - 1n;
  */
 export function TerminalScene({onSay}: {onSay: (s: string) => void}) {
   const {address} = useAccount();
-  const {send, busy} = useTx();
   const [tab, setTab] = useState<'aug' | 'lp'>('aug');
 
   const {data} = useReadContracts({
@@ -55,38 +61,34 @@ export function TerminalScene({onSay}: {onSay: (s: string) => void}) {
     <>
       <CentrePanel title="TERMINAL // REVENUE" sub="NO OPERATOR PRESENT">
         <BigStat
-          value={fmt(waiting, 18, 0)}
+          value={fmt(pending, 18, 4)}
           unit=" $RUN"
-          label="HELD IN SPLITTER — AWAITING RELEASE"
-          tone={waiting > 0n ? 'sodium' : undefined}
+          label="YOURS, ACCRUED SO FAR"
+          tone={pending > 0n ? 'lime' : undefined}
         />
-
-        <button
-          className="btn primary"
-          style={{width: '100%', marginTop: 10}}
-          disabled={busy || waiting === 0n}
-          onMouseEnter={() => onSay(line('terminal', waiting === 0n ? 'enter' : 'queued'))}
-          onClick={() =>
-            send('release revenue', {
-              address: addresses.Terminal,
-              abi: TerminalAbi,
-              functionName: 'pullRewards',
-            })
-          }
-        >
-          {waiting === 0n ? 'NOTHING TO RELEASE' : 'RELEASE INTO STREAMS'}
-        </button>
 
         <div className="centre-rule" />
 
         <Line k="STAKED, ALL POOLS" v={fmt(totalStaked, 18, 0)} />
-        <Line k="YOUR CLAIMABLE" v={`${fmt(pending, 18, 4)} $RUN`} tone="lime" />
         <Line k="LEFT IN $AUG STREAM" v={fmt(augRemaining, 18, 0)} />
         <Line k="LEFT IN LP STREAM" v={fmt(lpRemaining, 18, 0)} />
+        {/* Purely informational. It sweeps itself into the streams the next time anyone stakes,
+            claims or withdraws — there is no button here because there is nothing to press. */}
+        <Line k="INBOUND FROM FEES" v={fmt(waiting, 18, 0)} tone={waiting > 0n ? 'sodium' : undefined} />
+
+        <div className="centre-rule" />
+
+        {/* The kiosk is the one place that reads your wallet back to you — everywhere else you are
+            looking at a machine's holdings rather than your own. */}
+        <div className="centre-sub mono" style={{marginBottom: 6}}>
+          YOUR WALLET
+        </div>
+        <Wallet />
 
         <p className="faint centre-note">
-          Revenue streams across a full cycle. Staking the moment before a release and leaving after
-          it earns nothing — the stream sets the rate, never your access to your own funds.
+          Fees reach the streams on their own — the kiosk sweeps whatever is waiting every time
+          anyone stakes, claims or withdraws. Revenue then pays out across a full cycle rather than
+          in a lump, so the stream sets the rate, never your access to your own funds.
         </p>
       </CentrePanel>
 
@@ -121,6 +123,34 @@ export function TerminalScene({onSay}: {onSay: (s: string) => void}) {
           onSay={onSay}
         />
       </div>
+    </>
+  );
+}
+
+/** Gas plus the three tokens the protocol actually moves. USDG carries the real Global Dollar's
+ *  6 decimals, so it is read and formatted separately rather than assumed to be 18. */
+function Wallet() {
+  const {address} = useAccount();
+  const {data: eth} = useBalance({address, query: {enabled: !!address}});
+
+  const {data} = useReadContracts({
+    contracts: [
+      {address: addresses.RUN, abi: RUNAbi, functionName: 'balanceOf', args: [address!]},
+      {address: addresses.AUG, abi: AUGAbi, functionName: 'balanceOf', args: [address!]},
+      {address: addresses.USDG, abi: MockUSDGAbi, functionName: 'balanceOf', args: [address!]},
+      {address: addresses.USDG, abi: MockUSDGAbi, functionName: 'decimals'},
+    ],
+    query: {enabled: !!address},
+  });
+
+  const usdgDecimals = Number((data?.[3]?.result as number | undefined) ?? 6);
+
+  return (
+    <>
+      <Line k="ETH" v={eth ? Number(eth.formatted).toFixed(6) : '—'} />
+      <Line k="$RUN" v={fmt(data?.[0]?.result as bigint | undefined, 18, 2)} />
+      <Line k="$AUG" v={fmt(data?.[1]?.result as bigint | undefined, 18, 2)} />
+      <Line k="USDG" v={fmt(data?.[2]?.result as bigint | undefined, usdgDecimals, 2)} />
     </>
   );
 }

@@ -1,9 +1,16 @@
 'use client';
 
 import {useState} from 'react';
-import {useAccount, useReadContracts} from 'wagmi';
+import {useAccount, useBalance, useReadContracts} from 'wagmi';
 import {addresses} from '@/lib/addresses';
-import {TerminalAbi, AUGAbi, MockLpTokenAbi, RevenueSplitterAbi} from '@/lib/generated/abis';
+import {
+  TerminalAbi,
+  AUGAbi,
+  RUNAbi,
+  MockUSDGAbi,
+  MockLpTokenAbi,
+  RevenueSplitterAbi,
+} from '@/lib/generated/abis';
 import {useTx} from '@/lib/tx';
 import {fmt} from '@/lib/format';
 import {Stat, Rule, NotConnected} from '@/components/VendorShell';
@@ -12,7 +19,6 @@ const MAX_UINT = 2n ** 256n - 1n;
 
 export function TerminalClient() {
   const {address, isConnected} = useAccount();
-  const {send, busy} = useTx();
 
   const {data} = useReadContracts({
     contracts: [
@@ -43,28 +49,18 @@ export function TerminalClient() {
   return (
     <>
       <div className="panel" style={{marginBottom: 16}}>
-        <div className="between">
-          <div>
-            <Stat k="Revenue waiting in the splitter" v={`${fmt(waiting, 18, 0)} $RUN`} accent />
-            <Rule>
-              Nobody&apos;s cooperation is required for revenue to reach stakers — anyone can push it
-              through. The kiosk is unstaffed by design.
-            </Rule>
-          </div>
-          <button
-            className="btn"
-            disabled={busy || waiting === 0n}
-            onClick={() =>
-              send('push revenue to stakers', {
-                address: addresses.Terminal,
-                abi: TerminalAbi,
-                functionName: 'pullRewards',
-              })
-            }
-          >
-            release revenue
-          </button>
-        </div>
+        <h2 style={{marginBottom: 10}}>Your wallet</h2>
+        <Wallet />
+      </div>
+
+      <div className="panel" style={{marginBottom: 16}}>
+        <Stat k="Inbound from fees" v={`${fmt(waiting, 18, 0)} $RUN`} accent />
+        <Rule>
+          This reaches the streams on its own. The kiosk sweeps whatever is waiting every time anyone
+          stakes, claims or withdraws, so nobody has to release anything and nobody&apos;s
+          cooperation is required for revenue to reach stakers — which is the point of an unstaffed
+          kiosk.
+        </Rule>
       </div>
 
       <div className="grid g2">
@@ -96,6 +92,33 @@ export function TerminalClient() {
         before a release and leaving straight after earns nothing. Staking, unstaking and claiming are
         available at any moment — the stream sets the rate, never your access to your own funds.
       </Rule>
+    </>
+  );
+}
+
+/** Gas plus the three tokens the protocol moves. USDG uses the real Global Dollar's 6 decimals. */
+function Wallet() {
+  const {address} = useAccount();
+  const {data: eth} = useBalance({address, query: {enabled: !!address}});
+
+  const {data} = useReadContracts({
+    contracts: [
+      {address: addresses.RUN, abi: RUNAbi, functionName: 'balanceOf', args: [address!]},
+      {address: addresses.AUG, abi: AUGAbi, functionName: 'balanceOf', args: [address!]},
+      {address: addresses.USDG, abi: MockUSDGAbi, functionName: 'balanceOf', args: [address!]},
+      {address: addresses.USDG, abi: MockUSDGAbi, functionName: 'decimals'},
+    ],
+    query: {enabled: !!address},
+  });
+
+  const usdgDecimals = Number((data?.[3]?.result as number | undefined) ?? 6);
+
+  return (
+    <>
+      <Stat k="ETH" v={eth ? `${Number(eth.formatted).toFixed(6)} ETH` : '—'} sub="gas" />
+      <Stat k="$RUN" v={fmt(data?.[0]?.result as bigint | undefined, 18, 2)} accent />
+      <Stat k="$AUG" v={fmt(data?.[1]?.result as bigint | undefined, 18, 2)} />
+      <Stat k="USDG" v={fmt(data?.[2]?.result as bigint | undefined, usdgDecimals, 2)} />
     </>
   );
 }

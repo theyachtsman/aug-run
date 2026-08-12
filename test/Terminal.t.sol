@@ -411,4 +411,83 @@ contract TerminalTest is Test {
         vm.expectRevert(Terminal.ZeroAmount.selector);
         terminal.stake(false, 0);
     }
+
+    /*//////////////////////////////////////////////////////////////
+                       REVENUE ARRIVES WITHOUT ASKING
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Nobody should ever have to press "release". Revenue sitting in the splitter must reach
+    ///      the streams as a side effect of ordinary use, so these three tests drop revenue in
+    ///      WITHOUT calling pullRewards and assert each entrypoint sweeps it up on its own.
+    function test_stakeSweepsTheSplitterByItself() public {
+        runToken.transfer(address(splitter), 700e18);
+        splitter.sync(address(runToken));
+        assertEq(terminal.rewardRate(false), 0, "nothing streaming yet");
+
+        vm.prank(alice);
+        terminal.stake(false, 100e18);
+
+        assertGt(terminal.rewardRate(false), 0, "stake swept and started the stream");
+        vm.warp(block.timestamp + WEEK);
+        assertApproxEqAbs(terminal.earned(alice, false), 140e18, 1e12, "20% of 700 reached the staker");
+    }
+
+    function test_claimSweepsTheSplitterByItself() public {
+        vm.prank(alice);
+        terminal.stake(false, 100e18);
+
+        runToken.transfer(address(splitter), 700e18);
+        splitter.sync(address(runToken));
+
+        // A claim by anyone sweeps first, so the stream is running before the payout is computed.
+        vm.prank(alice);
+        terminal.claim(false);
+        assertGt(terminal.rewardRate(false), 0, "claim started the stream");
+
+        vm.warp(block.timestamp + WEEK);
+        vm.prank(alice);
+        uint256 paid = terminal.claim(false);
+        assertApproxEqAbs(paid, 140e18, 1e12, "full share paid without anyone releasing anything");
+    }
+
+    function test_withdrawSweepsTheSplitterByItself() public {
+        vm.prank(alice);
+        terminal.stake(false, 100e18);
+
+        runToken.transfer(address(splitter), 700e18);
+        splitter.sync(address(runToken));
+
+        vm.prank(alice);
+        terminal.withdraw(false, 1e18);
+        assertGt(terminal.rewardRate(false), 0, "withdraw swept and started the stream");
+    }
+
+    /// @dev The sweep sits at the top of every entrypoint, so it must be silent when there is
+    ///      nothing waiting — otherwise an ordinary stake reverts on a quiet week.
+    function test_sweepIsSilentWhenTheSplitterIsEmpty() public {
+        assertEq(splitter.accrued(address(runToken), RevenueSplitter.Bucket.Stakers), 0);
+
+        vm.prank(alice);
+        terminal.stake(false, 100e18); // must not revert
+
+        vm.prank(alice);
+        terminal.claim(false); // must not revert
+
+        vm.prank(alice);
+        terminal.withdraw(false, 100e18); // must not revert
+
+        assertEq(terminal.stakedBalance(alice, false), 0);
+    }
+
+    /// @dev The explicit call stays available for keepers and still signals clearly when idle.
+    function test_pullRewards_stillRevertsWhenNothingOwed_afterAutoSweep() public {
+        runToken.transfer(address(splitter), 700e18);
+        splitter.sync(address(runToken));
+
+        vm.prank(alice);
+        terminal.stake(false, 100e18); // sweeps it
+
+        vm.expectRevert(Terminal.NothingPulled.selector);
+        terminal.pullRewards(); // nothing left for the keeper to move
+    }
 }

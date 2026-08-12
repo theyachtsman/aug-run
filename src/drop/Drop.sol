@@ -299,6 +299,35 @@ contract Drop is Ownable, ReentrancyGuard {
         if (RUNNER.ownerOf(tokenId) != msg.sender) revert NotUnitOwner();
         if (claimed[dropId][tokenId]) revert AlreadyClaimed();
 
+        _claim(dropId, tokenId);
+    }
+
+    /// @notice Collect for every unit you hold in one transaction.
+    /// @dev The whole point of the Drop is that collecting is a single deliberate act, so holding
+    ///      five units must not mean five transactions. Units that are not yours, already
+    ///      collected, or owed nothing are skipped rather than reverted — one button has to work
+    ///      whatever the caller passes, or it stops being one button.
+    /// @return collected How many units actually had something delivered.
+    function claimMany(uint256 dropId, uint256[] calldata tokenIds)
+        external
+        nonReentrant
+        returns (uint256 collected)
+    {
+        Round storage r = rounds[dropId];
+        if (r.phase != Phase.Claimable) revert WrongPhase();
+        if (block.timestamp > r.claimDeadline) revert ClaimWindowClosed();
+
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            uint256 tokenId = tokenIds[i];
+            if (claimed[dropId][tokenId]) continue;
+            if (RUNNER.ownerOf(tokenId) != msg.sender) continue;
+            _claim(dropId, tokenId);
+            collected++;
+        }
+    }
+
+    /// @dev Delivery itself. Callers are responsible for the phase, window and ownership checks.
+    function _claim(uint256 dropId, uint256 tokenId) private {
         // Read the allocation BEFORE marking it claimed — `claimable` returns zeros once the flag
         // is set, so flipping it first would silently deliver nothing while closing the claim.
         (address[3] memory assets, uint256[3] memory amounts) = claimable(dropId, tokenId);
