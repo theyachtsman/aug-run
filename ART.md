@@ -35,15 +35,15 @@ doorways.
 
 | Stall | x | y | w | h | spans x | 2× region |
 |---|---|---|---|---|---|---|
-| Black Market (the Fence) | 34 | 165 | 222 | 385 | 34–256 | 68,330 → 512,1100 |
-| Ripperdoc | 284 | 165 | 142 | 385 | 284–426 | 568,330 → 852,1100 |
-| The Terminal (kiosk) | 428 | 165 | 74 | 385 | 428–502 | 856,330 → 1004,1100 |
-| The Fixer | 505 | 165 | 240 | 385 | 505–745 | 1010,330 → 1490,1100 |
-| Chop Shop (the Scrapper) | 749 | 165 | 238 | 385 | 749–987 | 1498,330 → 1974,1100 |
-| The Drop (the Courier) | 989 | 165 | 202 | 385 | 989–1191 | 1978,330 → 2382,1100 |
+| Black Market (the Fence) | 30 | 200 | 232 | 400 | 30–262 | 60,400 → 524,1200 |
+| Ripperdoc | 268 | 200 | 252 | 400 | 268–520 | 536,400 → 1040,1200 |
+| The Terminal (kiosk) | 530 | 200 | 110 | 400 | 530–640 | 1060,400 → 1280,1200 |
+| The Fixer | 648 | 200 | 251 | 400 | 648–899 | 1296,400 → 1798,1200 |
+| Chop Shop (the Scrapper) | 903 | 200 | 200 | 400 | 903–1103 | 1806,400 → 2206,1200 |
+| The Drop (the Courier) | 1108 | 200 | 172 | 400 | 1108–1280 | 2216,400 → 2560,1200 |
 
-Every box runs from the sign band (y 165) down to the floor (y 550), stopping at the pillar between
-it and its neighbour.
+Every box runs from the sign band (y 200) down to the floor (y 600), and spans its bay plus the
+pillar signage belonging to it — a player who clicks a shop's own sign expects to enter that shop.
 
 Notes:
 - Keep the **top-left ~360 × 150** region visually quiet — the AUG//RUN mark overlays there. The

@@ -17,22 +17,28 @@ export type Rect = {x: number; y: number; w: number; h: number};
 /**
  * Where each stall sits on the Runners Row backdrop, in logical pixels.
  *
- * Measured against the current backdrop: each box spans its sign band down to the floor, and stops
- * at the pillar between it and its neighbour, so the clickable area matches the shopfront a player
- * is actually aiming at. The stalls are not equal widths — the Terminal is a narrow wall kiosk and
- * the Fence has the widest frontage — and forcing them into a uniform grid would put the Terminal's
- * hotspot over its neighbours' doorways.
+ * Measured off the rendered backdrop rather than estimated from the source art — the stage is
+ * letterboxed and scaled, so eyeballing positions from the raw image is how the first pass ended up
+ * over 100px out on the Terminal.
  *
- * **Retuning:** press `H` on the Row to outline every box over the art. Adjust here and only here;
+ * Each box runs from the sign band (y 200) to the floor (y 600) and spans its bay plus the pillar
+ * signage that belongs to it — "BETTER THAN FACTORY DEFAULT" is the Ripperdoc's pitch, "DISCRETION
+ * IS DEADLY" is the Fixer's, "WE TAKE ANYTHING APART" is the Scrapper's — because a player who
+ * clicks a shop's own sign expects to walk into that shop.
+ *
+ * The stalls are deliberately unequal. The Terminal is a narrow wall kiosk at 110 wide against the
+ * Ripperdoc's 252; a uniform grid would put its box over its neighbours' doorways.
+ *
+ * **Retuning:** hold `H` on the Row to outline every box over the art. Adjust here and only here;
  * nothing else hard-codes a stall position.
  */
 export const ROW_HOTSPOTS: Record<string, Rect> = {
-  market: {x: 34, y: 165, w: 222, h: 385},
-  ripperdoc: {x: 284, y: 165, w: 142, h: 385},
-  terminal: {x: 428, y: 165, w: 74, h: 385},
-  fixer: {x: 505, y: 165, w: 240, h: 385},
-  chopshop: {x: 749, y: 165, w: 238, h: 385},
-  drop: {x: 989, y: 165, w: 202, h: 385},
+  market: {x: 30, y: 200, w: 232, h: 400},
+  ripperdoc: {x: 268, y: 200, w: 252, h: 400},
+  terminal: {x: 530, y: 200, w: 110, h: 400},
+  fixer: {x: 648, y: 200, w: 251, h: 400},
+  chopshop: {x: 903, y: 200, w: 200, h: 400},
+  drop: {x: 1108, y: 200, w: 172, h: 400},
 };
 
 /** Convert a viewport point to logical stage coordinates. */

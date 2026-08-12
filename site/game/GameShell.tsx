@@ -128,12 +128,19 @@ function RowScene({onEnter}: {onEnter: (v: VendorId) => void}) {
       })}
 
       {/* The mark is ~3:1, so 110 tall renders ~331 wide — filling the quiet top-left region the
-          backdrop reserves without crowding the first stall, which starts at x 34. */}
+          backdrop reserves without crowding the first stall, which starts at x 30. The drips run to
+          the very bottom edge of the canvas, so the label needs a real gap, not a negative one. */}
       <div className="row-brand">
         <Logo height={110} />
         <div
           className="mono"
-          style={{fontSize: 12, letterSpacing: '0.24em', color: 'var(--dim)', marginTop: -4}}
+          style={{
+            fontSize: 11,
+            letterSpacing: '0.42em',
+            textIndent: '0.42em',
+            color: 'var(--dim)',
+            marginTop: 7,
+          }}
         >
           RUNNERS ROW
         </div>

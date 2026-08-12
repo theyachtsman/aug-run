@@ -1023,13 +1023,19 @@ td { padding: 8px; border-bottom: 1px solid var(--line); }
 }
 .hud-brand { display: flex; align-items: center; }
 
-/* Runners Row title block. The backdrop keeps its top-left quiet for exactly this. */
+/* Runners Row title block. The backdrop keeps its top-left quiet for exactly this.
+   The mark carries ~5% transparent padding either side, so the image box is wider than the visible
+   ink. Left-aligning both put the label under the padding rather than under the letters; the ink is
+   centred in its canvas to within 1.5px, so centring the label lines it up with the mark itself. */
 .row-brand {
   position: absolute;
-  left: 36px;
-  top: 28px;
+  left: 30px;
+  top: 26px;
   z-index: 40;
   pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 .row-hint {
   position: absolute;
