@@ -13,13 +13,14 @@ import {ArtSlot} from '@/components/ArtSlot';
  */
 export function Dialogue({
   speaker,
-  portrait,
   line,
+  machine,
   onAdvance,
 }: {
   speaker: string;
-  portrait: string;
   line: string;
+  /** The Terminal has no face. It prints at you instead of talking to you. */
+  machine?: boolean;
   onAdvance?: () => void;
 }) {
   const [shown, setShown] = useState('');
@@ -52,9 +53,17 @@ export function Dialogue({
   };
 
   return (
-    <div className="dlg" onClick={complete}>
+    <div className={`dlg ${machine ? 'machine' : ''}`} onClick={complete}>
       <div className="dlg-portrait">
-        <ArtSlot label={speaker} hint="portrait" ratio="1 / 1" />
+        {machine ? (
+          <div className="dlg-kiosk mono">
+            <span>▚▚▚</span>
+            <span>NO</span>
+            <span>OPERATOR</span>
+          </div>
+        ) : (
+          <ArtSlot label={speaker} hint="portrait" ratio="1 / 1" />
+        )}
       </div>
       <div className="dlg-body">
         <div className="dlg-name">{speaker}</div>

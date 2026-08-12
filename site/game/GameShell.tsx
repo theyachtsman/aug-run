@@ -10,7 +10,10 @@ import {VENDORS, VENDOR_ORDER, line, type VendorId} from './vendors';
 import {ArtSlot} from '@/components/ArtSlot';
 import {MarketScene} from './scenes/MarketScene';
 import {RipperdocScene} from './scenes/RipperdocScene';
-import {SimpleShopScene} from './scenes/SimpleShopScene';
+import {TerminalScene} from './scenes/TerminalScene';
+import {FixerScene} from './scenes/FixerScene';
+import {ChopShopScene} from './scenes/ChopShopScene';
+import {DropScene} from './scenes/DropScene';
 
 type SceneId = 'row' | VendorId;
 
@@ -60,7 +63,7 @@ export function GameShell() {
         )}
 
         {vendor && say && (
-          <Dialogue speaker={vendor.name} portrait={vendor.name} line={say} />
+          <Dialogue speaker={vendor.name} line={say} machine={scene === 'terminal'} />
         )}
 
         <Dissolve phase={phase} />
@@ -146,10 +149,13 @@ function ShopScene({
         />
       </div>
 
-      {/* Vendor cutout, layered over the interior */}
-      <div className="vendor-sprite" style={{left: 60, width: 300}}>
-        <ArtSlot label={v.name.toUpperCase()} hint="cutout · PNG alpha · ~700px tall" ratio="3 / 5" />
-      </div>
+      {/* Vendor cutout, layered over the interior. The Terminal has nobody behind it — that
+          absence is a design point in the spec, not an asset that hasn't arrived. */}
+      {id !== 'terminal' && (
+        <div className="vendor-sprite" style={{left: 60, width: 300}}>
+          <ArtSlot label={v.name.toUpperCase()} hint="cutout · PNG alpha · 600×1000" ratio="3 / 5" />
+        </div>
+      )}
 
       <button className="btn sm scene-back" onClick={onBack}>
         ← back to the Row
@@ -157,7 +163,10 @@ function ShopScene({
 
       {id === 'market' && <MarketScene onSay={onSay} />}
       {id === 'ripperdoc' && <RipperdocScene onSay={onSay} />}
-      {id !== 'market' && id !== 'ripperdoc' && <SimpleShopScene id={id} onSay={onSay} />}
+      {id === 'terminal' && <TerminalScene onSay={onSay} />}
+      {id === 'fixer' && <FixerScene onSay={onSay} />}
+      {id === 'chopshop' && <ChopShopScene onSay={onSay} />}
+      {id === 'drop' && <DropScene onSay={onSay} />}
     </>
   );
 }

@@ -555,3 +555,374 @@ td { padding: 8px; border-bottom: 1px solid var(--line); }
   font-size: 8px; letter-spacing: 0.16em; color: var(--faint); margin-bottom: 2px;
 }
 .item-chip .hwname { font-size: 9px; color: var(--dim); margin-top: 2px; }
+
+/* ==================================================================
+   Shop menus — Terminal, Fixer, Chop Shop, Drop
+   ================================================================== */
+
+/* Centre panel, for shops whose subject is not a unit. Shares .preview geometry exactly so the
+   region reserved in the art brief holds for every interior. */
+.centre-head {
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+.centre-title {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  color: var(--red);
+}
+.centre-sub { font-size: 10.5px; letter-spacing: 0.1em; margin-top: 3px; }
+.centre-body { flex: 1; min-height: 0; overflow-y: auto; }
+.centre-rule { height: 1px; background: var(--line); margin: 12px 0; }
+.centre-note { font-size: 11px; line-height: 1.45; margin: 12px 0 0; }
+
+.bigstat { text-align: center; padding: 14px 0 6px; }
+.bigstat-v {
+  font-family: var(--mono);
+  font-size: 34px;
+  line-height: 1;
+  color: var(--text);
+  text-shadow: 0 0 24px rgba(255, 39, 64, 0.28);
+}
+.bigstat-v.red { color: var(--red); }
+.bigstat-v.lime { color: var(--lime); }
+.bigstat-v.sodium { color: var(--sodium); }
+.bigstat-u { font-size: 15px; opacity: 0.6; }
+.bigstat-l {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  margin-top: 8px;
+}
+
+.cline {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px dotted var(--line);
+  font-size: 11.5px;
+}
+.cline:last-child { border-bottom: 0; }
+.cline-k { color: var(--dim); }
+.cline-v { font-family: var(--mono); color: var(--text); }
+.cline-v.red { color: var(--red); }
+.cline-v.lime { color: var(--lime); }
+.cline-v.sodium { color: var(--sodium); }
+
+/* Tabs — one counter, several kinds of business. */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.tab {
+  flex: 1;
+  padding: 7px 8px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--red); border-bottom-color: var(--red); }
+
+/* Key/value grid — the numbers that sit above the controls. */
+.kv-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.kv {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  background: var(--panel);
+}
+.kv-k { font-size: 10px; color: var(--faint); letter-spacing: 0.04em; }
+.kv-v { font-family: var(--mono); font-size: 12.5px; color: var(--text); }
+.kv-v.red { color: var(--red); }
+.kv-v.lime { color: var(--lime); }
+
+/* Share-of-pool gauge. */
+.gauge { margin-bottom: 12px; }
+.gauge-bar {
+  height: 6px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.gauge-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--red-dim), var(--red));
+  box-shadow: 0 0 12px rgba(255, 39, 64, 0.5);
+  transition: width 0.3s;
+}
+.gauge-legend {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--faint);
+  margin-top: 5px;
+}
+
+/* LTV bar with the ice line drawn on it — drift is watched, not calculated. */
+.loan-card {
+  padding: 10px;
+  margin-bottom: 8px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--line-hi);
+  border-radius: var(--r);
+}
+.loan-card.iced { border-color: var(--red); box-shadow: inset 0 0 24px rgba(255, 39, 64, 0.1); }
+
+.ltv { margin-top: 8px; }
+.ltv-bar {
+  position: relative;
+  height: 6px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.ltv-fill { height: 100%; background: var(--lime); transition: width 0.3s; }
+.ltv-fill.warm { background: var(--sodium); }
+.ltv-fill.hot { background: var(--red); box-shadow: 0 0 12px rgba(255, 39, 64, 0.6); }
+.ltv-ice {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  left: 70%;
+  width: 1px;
+  background: var(--cyan);
+  box-shadow: 0 0 6px var(--cyan);
+}
+.ltv-legend {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--faint);
+  margin-top: 4px;
+}
+
+/* The Scrapper's table. */
+.table-row {
+  display: grid;
+  grid-template-columns: 44px 60px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  text-align: left;
+  background: linear-gradient(180deg, #14141c, #0a0a0e);
+  border: 1px solid var(--line-hi);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: border-color 0.12s, transform 0.08s;
+}
+.table-row:hover { transform: translateY(-1px); border-color: var(--cyan); }
+.table-row.selected { border-color: var(--red); box-shadow: inset 0 0 22px rgba(255, 39, 64, 0.12); }
+.table-row.closed { opacity: 0.45; }
+.table-row .odds { font-family: var(--mono); font-size: 13px; color: var(--cyan); }
+
+/* Odds ring — moves live as the backing slider moves, which is the whole lesson of the shop. */
+.ring-wrap { position: relative; width: 160px; margin: 4px auto 10px; }
+.ring { width: 160px; height: 160px; display: block; }
+.ring-track { fill: none; stroke: var(--panel-2); stroke-width: 10; }
+.ring-fill {
+  fill: none;
+  stroke: var(--lime);
+  stroke-width: 10;
+  stroke-linecap: butt;
+  transition: stroke-dasharray 0.3s, stroke 0.3s;
+  filter: drop-shadow(0 0 6px currentColor);
+}
+.ring-fill.warm { stroke: var(--sodium); }
+.ring-fill.hot { stroke: var(--red); }
+.ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.ring-pct { font-family: var(--mono); font-size: 26px; color: var(--text); }
+.ring-sub { font-size: 8.5px; letter-spacing: 0.16em; color: var(--faint); margin-top: 4px; }
+
+/* Labelled field with a slider. */
+.field { margin-bottom: 10px; }
+.field-l {
+  display: block;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  margin-bottom: 5px;
+}
+.slider {
+  width: 100%;
+  height: 20px;
+  margin: 2px 0 6px;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+.slider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -5px;
+  border-radius: 1px;
+  background: var(--red);
+  box-shadow: 0 0 10px rgba(255, 39, 64, 0.7);
+}
+.slider::-moz-range-track {
+  height: 4px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+.slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 1px;
+  background: var(--red);
+  box-shadow: 0 0 10px rgba(255, 39, 64, 0.7);
+}
+
+/* The Drop's three steps. */
+.steps { display: grid; gap: 6px; }
+.step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  text-align: left;
+  font-size: 12px;
+  color: var(--text);
+  background: linear-gradient(180deg, #14141c, #0a0a0e);
+  border: 1px solid var(--line-hi);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: border-color 0.12s, opacity 0.12s;
+}
+.step:disabled { opacity: 0.4; cursor: not-allowed; }
+.step.next { border-color: var(--red); box-shadow: inset 0 0 22px rgba(255, 39, 64, 0.12); }
+.step.done { border-color: var(--line); }
+.step em {
+  display: block;
+  font-style: normal;
+  font-size: 10px;
+  color: var(--faint);
+  margin-top: 2px;
+}
+.step-n {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--red);
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+
+/* The parcel behind the Courier's counter. */
+.parcel {
+  padding: 26px 14px;
+  margin-top: 16px;
+  text-align: center;
+  border: 1px dashed var(--line-hi);
+  border-radius: var(--r);
+}
+.parcel.collected { border-style: solid; border-color: var(--lime); }
+.parcel-mark {
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  color: var(--dim);
+}
+.parcel.collected .parcel-mark { color: var(--lime); }
+
+.lots { display: grid; gap: 6px; margin-bottom: 12px; }
+.lot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--line-hi);
+  border-radius: var(--r);
+}
+.lot-sym { font-size: 12.5px; color: var(--text); }
+.lot-hw { font-size: 9.5px; color: var(--faint); margin-top: 2px; }
+.lot-amt { font-size: 13px; color: var(--lime); }
+
+/* Unread marker on a unit card that has something waiting. */
+.pip {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 8px var(--red);
+}
+
+/* Selected inventory chip, for pickers that select rather than drag. */
+.item-chip.picked {
+  border-color: var(--red);
+  box-shadow: inset 0 0 22px rgba(255, 39, 64, 0.14);
+}
+
+/* The Terminal prints rather than speaks. */
+.dlg.machine .dlg-text {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: 0.02em;
+  color: var(--cyan);
+}
+.dlg.machine .dlg-name { color: var(--cyan); }
+.dlg-kiosk {
+  width: 104px;
+  height: 104px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  background: var(--panel-2);
+  border: 1px solid var(--line-hi);
+  border-radius: var(--r);
+}

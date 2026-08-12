@@ -57,19 +57,31 @@ Notes:
 The interior behind the counter. The vendor is a **separate cutout layered on top**, so do not paint
 them into the background.
 
-Three regions of every interior are covered by UI and must stay visually quiet:
+Four regions of every interior are covered by UI and must stay visually quiet. These are measured
+from the shipped stylesheet, so they are exact:
 
 | Region | Logical px | What sits there |
 |---|---|---|
-| Left | x 60–360, standing on the floor line | the vendor cutout |
-| **Centre** | **x 386–722, y 76–620** | **the unit preview panel** |
-| Right | x 734–1254 | the shop menu |
-| Bottom | y 570–720 | the dialogue box |
+| Left | x 60–360, standing on a floor line at y 552 | the vendor cutout |
+| **Centre** | **x 386–722, y 68–544** | **the centre display panel** |
+| Right | x 754–1254, y 26–526 | the shop menu |
+| Bottom | x 24–1256, y 550–700 | the dialogue box |
 
-The **centre is the important one at the Black Market and the Ripperdoc** — a large preview of the
-currently selected Stock//Runner stands there, so those two interiors want an obvious empty space in
-the middle of frame: a lit inspection plate, an empty gantry, a clamp rig, a display alcove. Somewhere
-a unit would plausibly be stood up and looked at. The other four interiors can use the centre freely.
+**Every one of the six interiors uses the centre panel** — it is the focal object of each shop, so
+each interior wants an obvious empty space in the middle of frame for something to be stood up and
+looked at:
+
+| Interior | What occupies the centre | So the backdrop wants |
+|---|---|---|
+| Black Market | the selected unit, full body | a lit inspection plate or display alcove |
+| Ripperdoc | the unit on the bench, full body | a clamp rig or gantry |
+| The Terminal | a revenue readout | a recessed screen bezel or cable run |
+| The Fixer | the unit you are pledging | a spot on the customer's side of the desk |
+| Chop Shop | an odds ring | a hard-lit patch of table |
+| The Drop | a parcel manifest | an empty shelf slot at the collection window |
+
+The two that carry the most weight are the **Black Market and the Ripperdoc**, where a Stock//Runner
+stands nearly 340px wide while the operator decides what to do with it.
 
 | Interior | Character |
 |---|---|
@@ -87,8 +99,12 @@ a unit would plausibly be stood up and looked at. The other four interiors can u
 | | |
 |---|---|
 | Files | `vendor-market.png`, `vendor-ripperdoc.png`, `vendor-fixer.png`, `vendor-chopshop.png`, `vendor-drop.png` |
-| Size | ~600 × 1400 (renders ~300 × 700 logical) |
+| Size | **600 × 1000** (3:5, renders 300 × 500 logical) |
 | Format | **PNG with alpha** — cut out, no background |
+
+The slot is anchored so the figure stands from **y 52 to y 552** — feet on the floor line, head near
+the top of frame. The dialogue box crosses the last two pixels of the feet, which is correct: it sits
+in front of the scene.
 
 Full-body, standing behind the counter, facing the viewer. Flat cutout layered over the interior —
 they do not need to be lit to match perfectly, a slight separation is period-correct.
