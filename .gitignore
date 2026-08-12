@@ -21,9 +21,12 @@ dist/
 .vite/
 *.tsbuildinfo
 
-# Generated from Foundry's out/ by scripts/extract-abis.mjs — run `forge build` then `npm run abis`
-lib/generated/
-src/generated/
+# site/lib/generated/abis.ts is generated from Foundry's out/ by site/scripts/extract-abis.mjs, but
+# it IS committed on purpose: out/ is ignored, so without it a fresh clone could not build the site
+# without installing Foundry and running `forge build` first. Regenerate with `npm run abis`.
+# Any other generated tree stays out.
+/lib/generated/
+/src/generated/
 
 # Editor / OS
 .DS_Store
