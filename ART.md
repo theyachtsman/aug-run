@@ -46,7 +46,8 @@ Every box runs from the sign band (y 165) down to the floor (y 550), stopping at
 it and its neighbour.
 
 Notes:
-- Keep the **top-left ~420 × 130** region visually quiet — the AUG//RUN mark overlays there.
+- Keep the **top-left ~360 × 150** region visually quiet — the AUG//RUN mark overlays there. The
+  mark is ~3:1 and renders 331 × 110 with the RUNNERS ROW label beneath it.
 - The **bottom ~150px** is where the dialogue box sits when a vendor speaks. Nothing critical there.
 - The Terminal is an unstaffed **wall-mounted kiosk**, narrower than the others and set back — it
   should read as a machine bolted to the wall, not a shopfront.

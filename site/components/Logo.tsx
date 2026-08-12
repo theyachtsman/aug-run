@@ -1,6 +1,6 @@
 'use client';
 
-import {useState} from 'react';
+import {useCallback, useState} from 'react';
 
 /**
  * The AUG//RUN mark.
@@ -16,6 +16,13 @@ import {useState} from 'react';
 export function Logo({height = 34, className}: {height?: number; className?: string}) {
   const [failed, setFailed] = useState(false);
 
+  // The markup is server-rendered, so a 404 can fire its error event before React has attached
+  // onError — leaving a broken-image icon that never falls back. Re-check the element on mount:
+  // a decoded-but-zero-width image is one that already failed.
+  const check = useCallback((img: HTMLImageElement | null) => {
+    if (img?.complete && img.naturalWidth === 0) setFailed(true);
+  }, []);
+
   if (failed) {
     return (
       <span className={`logo ${className ?? ''}`} style={{fontSize: height * 0.72}}>
@@ -26,6 +33,7 @@ export function Logo({height = 34, className}: {height?: number; className?: str
 
   return (
     <img
+      ref={check}
       src="/art/logo.png"
       alt="AUG//RUN"
       className={`logo-img ${className ?? ''}`}

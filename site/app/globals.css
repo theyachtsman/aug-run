@@ -284,6 +284,11 @@ td { padding: 8px; border-bottom: 1px solid var(--line); }
 .hotspot {
   position: absolute;
   cursor: pointer;
+  /* A <button> with no background declared inherits the UA's opaque buttonface grey, which paints
+     six solid blocks over the backdrop. Must be stated explicitly, not left to inherit. */
+  background: transparent;
+  padding: 0;
+  appearance: none;
   border: 1px solid transparent;
   border-radius: 2px;
   transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;

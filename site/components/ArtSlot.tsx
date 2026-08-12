@@ -1,6 +1,6 @@
 'use client';
 
-import {useState} from 'react';
+import {useCallback, useState} from 'react';
 
 /**
  * A reserved space for commissioned art.
@@ -31,9 +31,17 @@ export function ArtSlot({
 }) {
   const [failed, setFailed] = useState(false);
 
+  // Server-rendered markup means a missing file can fire its error event before React attaches
+  // onError, stranding a broken-image icon where the placeholder should be. An image that is
+  // complete but zero-width has already failed, so catch that on mount.
+  const check = useCallback((img: HTMLImageElement | null) => {
+    if (img?.complete && img.naturalWidth === 0) setFailed(true);
+  }, []);
+
   if (src && !failed) {
     return (
       <img
+        ref={check}
         src={src}
         alt={label}
         className={`art-img ${className ?? ''}`}

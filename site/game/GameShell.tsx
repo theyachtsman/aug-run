@@ -127,11 +127,13 @@ function RowScene({onEnter}: {onEnter: (v: VendorId) => void}) {
         );
       })}
 
+      {/* The mark is ~3:1, so 110 tall renders ~331 wide — filling the quiet top-left region the
+          backdrop reserves without crowding the first stall, which starts at x 34. */}
       <div className="row-brand">
-        <Logo height={82} />
+        <Logo height={110} />
         <div
           className="mono"
-          style={{fontSize: 12, letterSpacing: '0.24em', color: 'var(--dim)', marginTop: 2}}
+          style={{fontSize: 12, letterSpacing: '0.24em', color: 'var(--dim)', marginTop: -4}}
         >
           RUNNERS ROW
         </div>
