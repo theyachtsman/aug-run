@@ -3,7 +3,7 @@
 import {useEffect, useState} from 'react';
 import {useAccount, useReadContract, useReadContracts} from 'wagmi';
 import {addresses} from '@/lib/addresses';
-import {DropAbi, RUNAbi, AugmentsAbi} from '@/lib/generated/abis';
+import {DropAbi, RUNAbi, AugmentsAbi, RipperdocAbi} from '@/lib/generated/abis';
 import {useTx} from '@/lib/tx';
 import {fmt, fmtWeight, countdown} from '@/lib/format';
 import {Stat, Rule, NotConnected} from '@/components/VendorShell';
@@ -55,6 +55,12 @@ export function DropClient() {
     contracts: owned.flatMap((u) => [
       {address: addresses.Drop, abi: DropAbi, functionName: 'claimable' as const, args: [id, BigInt(u)]},
       {address: addresses.Drop, abi: DropAbi, functionName: 'claimed' as const, args: [id, BigInt(u)]},
+      {
+        address: addresses.Ripperdoc,
+        abi: RipperdocAbi,
+        functionName: 'unitEligibleWeight' as const,
+        args: [BigInt(u)],
+      },
     ]),
     query: {enabled: id > 0n && owned.length > 0 && !!address},
   });
@@ -69,14 +75,15 @@ export function DropClient() {
   const ready = phase === 2 && deadline > now;
 
   const units = owned.map((u, i) => {
-    const res = shelf?.[i * 2]?.result as
+    const res = shelf?.[i * 3]?.result as
       | readonly [readonly `0x${string}`[], readonly bigint[]]
       | undefined;
     const assets = res?.[0] ?? [];
     const amounts = res?.[1] ?? [];
     return {
       tokenId: u,
-      claimed: (shelf?.[i * 2 + 1]?.result as boolean | undefined) ?? false,
+      claimed: (shelf?.[i * 3 + 1]?.result as boolean | undefined) ?? false,
+      eligible: (shelf?.[i * 3 + 2]?.result as bigint | undefined) ?? 0n,
       lots: assets
         .map((a, b) => ({asset: a, amount: amounts[b] ?? 0n}))
         .filter((l) => l.asset !== ZERO && l.amount > 0n),
@@ -85,6 +92,10 @@ export function DropClient() {
 
   const waiting = units.filter((u) => !u.claimed && u.lots.length > 0);
   const totalLots = waiting.reduce((n, u) => n + u.lots.length, 0);
+
+  // Earning now but paid nothing by this round — seated after it was weighed.
+  const nextRound = units.filter((u) => u.lots.length === 0 && !u.claimed && u.eligible > 0n);
+  const nextWeight = nextRound.reduce((w, u) => w + u.eligible, 0n);
 
   return (
     <>
@@ -141,6 +152,19 @@ export function DropClient() {
           </div>
         )}
 
+        {nextRound.length > 0 && (
+          <div className="notice" style={{marginTop: 14, padding: '10px 12px'}}>
+            <span style={{fontSize: 12}}>
+              {nextRound.length === 1
+                ? `Unit #${String(nextRound[0].tokenId).padStart(4, '0')} carries `
+                : `${nextRound.length} of your units carry `}
+              <strong style={{color: 'var(--lime)'}}>{fmtWeight(nextWeight)}</strong> into the next
+              Drop, but got nothing from this one. A Drop pays out the weights it snapshotted when it
+              was weighed, so a bay seated after that is not in the round — it earns from the next.
+            </span>
+          </div>
+        )}
+
         <Rule>
           Assets land in each unit&apos;s own wallet rather than yours, so its position and PnL belong
           to the machine and travel with it when it sells. Anything left when the window closes is
@@ -166,7 +190,11 @@ export function DropClient() {
                   <td>#{String(u.tokenId).padStart(4, '0')}</td>
                   <td>
                     {u.lots.length === 0 ? (
-                      <span className="dim">nothing this cycle</span>
+                      u.eligible > 0n ? (
+                        <span className="tag warn">earns from the next Drop</span>
+                      ) : (
+                        <span className="dim">nothing this cycle</span>
+                      )
                     ) : (
                       <span className="row" style={{gap: 6}}>
                         {u.lots.map((l, i) => (

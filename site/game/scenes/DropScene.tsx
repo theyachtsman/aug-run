@@ -3,9 +3,9 @@
 import {useEffect, useState} from 'react';
 import {useAccount, useReadContract, useReadContracts} from 'wagmi';
 import {addresses} from '@/lib/addresses';
-import {DropAbi, AugmentsAbi, RUNAbi} from '@/lib/generated/abis';
+import {DropAbi, AugmentsAbi, RUNAbi, RipperdocAbi} from '@/lib/generated/abis';
 import {useTx} from '@/lib/tx';
-import {fmt, countdown} from '@/lib/format';
+import {fmt, fmtWeight, countdown} from '@/lib/format';
 import {useOwnedUnits} from '@/components/Inventory';
 import {line} from '../vendors';
 import {hardware} from '../augmentNames';
@@ -61,23 +61,39 @@ export function DropScene({onSay}: {onSay: (s: string) => void}) {
 
   // Which of your units actually have something on the shelf. This is what the button acts on, so
   // it is computed once here and drives the count, the button and the cards alike.
+  //
+  // Eligible weight is read alongside it because the commonest confusion at this counter is a unit
+  // that is plainly earning yet has nothing waiting: a Drop pays out the weights snapshotted when
+  // it was weighed, so a bay seated afterwards is simply not in that round. Without showing the
+  // weight it carries forward, that reads as the Drop being broken.
   const {data: shelf} = useReadContracts({
     contracts: owned.flatMap((u) => [
       {address: addresses.Drop, abi: DropAbi, functionName: 'claimable' as const, args: [id, BigInt(u)]},
       {address: addresses.Drop, abi: DropAbi, functionName: 'claimed' as const, args: [id, BigInt(u)]},
+      {
+        address: addresses.Ripperdoc,
+        abi: RipperdocAbi,
+        functionName: 'unitEligibleWeight' as const,
+        args: [BigInt(u)],
+      },
     ]),
     query: {enabled: id > 0n && owned.length > 0 && !!address},
   });
 
   const units = owned.map((u, i) => {
     const amounts =
-      (shelf?.[i * 2]?.result as readonly [unknown, readonly bigint[]] | undefined)?.[1] ?? [];
-    const claimed = (shelf?.[i * 2 + 1]?.result as boolean | undefined) ?? false;
-    return {tokenId: u, lots: amounts.filter((a) => a > 0n).length, claimed};
+      (shelf?.[i * 3]?.result as readonly [unknown, readonly bigint[]] | undefined)?.[1] ?? [];
+    const claimed = (shelf?.[i * 3 + 1]?.result as boolean | undefined) ?? false;
+    const eligible = (shelf?.[i * 3 + 2]?.result as bigint | undefined) ?? 0n;
+    return {tokenId: u, lots: amounts.filter((a) => a > 0n).length, claimed, eligible};
   });
 
   const waiting = units.filter((u) => !u.claimed && u.lots > 0);
   const totalLots = waiting.reduce((n, u) => n + u.lots, 0);
+
+  // Units earning now that got nothing from this round — seated after it was weighed.
+  const nextRound = units.filter((u) => u.lots === 0 && !u.claimed && u.eligible > 0n);
+  const nextWeight = nextRound.reduce((w, u) => w + u.eligible, 0n);
   const selected = pick ?? waiting[0]?.tokenId ?? owned[0];
   const closing = deadline > now && deadline - now < 86_400;
 
@@ -121,8 +137,8 @@ export function DropScene({onSay}: {onSay: (s: string) => void}) {
             <>
               <BigStat value="0" label="NOTHING HELD FOR YOU" />
               <p className="faint" style={{fontSize: 11.5, textAlign: 'center', margin: '4px 0 0'}}>
-                {units.some((u) => u.claimed)
-                  ? 'Already collected. It went into your units&rsquo; own wallets.'
+                {units.every((u) => u.claimed || u.eligible === 0n) && units.some((u) => u.claimed)
+                  ? 'Already collected. It went into your units’ own wallets.'
                   : 'No bay of yours was earning when this Drop was weighed.'}
               </p>
             </>
@@ -159,6 +175,22 @@ export function DropScene({onSay}: {onSay: (s: string) => void}) {
           />
         )}
 
+        {/* Carrying weight but paid nothing is the confusing case, so name it explicitly rather
+            than leaving an earning unit looking like a broken one. */}
+        {nextRound.length > 0 && (
+          <div className="notice" style={{marginTop: 10, padding: '9px 11px'}}>
+            <span style={{fontSize: 11.5}}>
+              {nextRound.length === 1
+                ? `Unit #${String(nextRound[0].tokenId).padStart(4, '0')} carries`
+                : `${nextRound.length} of your units carry`}{' '}
+              <strong style={{color: 'var(--lime)'}}>{fmtWeight(nextWeight)}</strong> into the next
+              Drop. {nextRound.length === 1 ? 'It was' : 'They were'} seated after this one was
+              weighed — a Drop pays out the weights it snapshotted, so {nextRound.length === 1 ? 'it earns' : 'they earn'}{' '}
+              from the next round rather than this one.
+            </span>
+          </div>
+        )}
+
         {owned.length > 0 && (
           <>
             <h3 style={{margin: '14px 0 8px'}}>Your units</h3>
@@ -174,7 +206,13 @@ export function DropScene({onSay}: {onSay: (s: string) => void}) {
                 >
                   <div className="uid">#{String(u.tokenId).padStart(4, '0')}</div>
                   <div className="umodel">
-                    {u.claimed ? 'collected' : u.lots > 0 ? `${u.lots} lot${u.lots === 1 ? '' : 's'}` : 'nothing'}
+                    {u.claimed
+                      ? 'collected'
+                      : u.lots > 0
+                        ? `${u.lots} lot${u.lots === 1 ? '' : 's'}`
+                        : u.eligible > 0n
+                          ? 'next drop'
+                          : 'nothing'}
                   </div>
                   {!u.claimed && u.lots > 0 && <span className="pip" />}
                 </button>
