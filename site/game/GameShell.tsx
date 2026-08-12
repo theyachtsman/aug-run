@@ -8,6 +8,7 @@ import {DragProvider} from './dnd';
 import {ROW_HOTSPOTS, type Rect} from './stage';
 import {VENDORS, VENDOR_ORDER, line, type VendorId} from './vendors';
 import {ArtSlot} from '@/components/ArtSlot';
+import {Logo} from '@/components/Logo';
 import {MarketScene} from './scenes/MarketScene';
 import {RipperdocScene} from './scenes/RipperdocScene';
 import {TerminalScene} from './scenes/TerminalScene';
@@ -75,6 +76,21 @@ export function GameShell() {
 /* ------------------------------------------------------------------ ROW */
 
 function RowScene({onEnter}: {onEnter: (v: VendorId) => void}) {
+  // Hold H to outline the stall hotspots over the art. The backdrop will be replaced more than
+  // once before launch and every replacement moves the shopfronts, so retuning needs to be a
+  // look-and-adjust loop rather than a guess-and-click one.
+  const [debug, setDebug] = useState(false);
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => e.key.toLowerCase() === 'h' && setDebug(true);
+    const up = (e: KeyboardEvent) => e.key.toLowerCase() === 'h' && setDebug(false);
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup', up);
+    return () => {
+      window.removeEventListener('keydown', down);
+      window.removeEventListener('keyup', up);
+    };
+  }, []);
+
   return (
     <>
       <div className="layer">
@@ -83,6 +99,7 @@ function RowScene({onEnter}: {onEnter: (v: VendorId) => void}) {
           hint="2560×1440 painted · the full strip, all six stalls, sodium lamps"
           ratio="16 / 9"
           className=""
+          src="/art/row-backdrop.png"
         />
       </div>
 
@@ -91,35 +108,36 @@ function RowScene({onEnter}: {onEnter: (v: VendorId) => void}) {
         return (
           <button
             key={id}
-            className="hotspot"
+            className={`hotspot ${debug ? 'debug' : ''}`}
             style={{left: r.x, top: r.y, width: r.w, height: r.h}}
             onClick={() => onEnter(id)}
             aria-label={VENDORS[id].stallLabel}
           >
             <span className="hotspot-label">{VENDORS[id].stallLabel}</span>
+            {debug && (
+              <span className="hotspot-coords mono">
+                {id}
+                <br />
+                {r.x},{r.y}
+                <br />
+                {r.w}×{r.h}
+              </span>
+            )}
           </button>
         );
       })}
 
-      <div
-        style={{
-          position: 'absolute',
-          left: 40,
-          top: 44,
-          zIndex: 40,
-          pointerEvents: 'none',
-        }}
-      >
-        <div className="logo" style={{fontSize: 40}}>
-          AUG<span className="slash">//</span>RUN
-        </div>
+      <div className="row-brand">
+        <Logo height={82} />
         <div
           className="mono"
-          style={{fontSize: 12, letterSpacing: '0.24em', color: 'var(--dim)', marginTop: 4}}
+          style={{fontSize: 12, letterSpacing: '0.24em', color: 'var(--dim)', marginTop: 2}}
         >
           RUNNERS ROW
         </div>
       </div>
+
+      <div className="row-hint faint mono">hold H to show stall hotspots</div>
     </>
   );
 }
@@ -139,13 +157,14 @@ function ShopScene({
 
   return (
     <>
-      {/* Interior backdrop */}
+      {/* Interior backdrop. Each shop reads its own file, so interiors can land one at a time. */}
       <div className="layer">
         <ArtSlot
           label={`${v.shop.toUpperCase()} — INTERIOR`}
           hint="2560×1440 painted"
           ratio="16 / 9"
           className=""
+          src={`/art/interior-${id}.png`}
         />
       </div>
 
@@ -153,7 +172,13 @@ function ShopScene({
           absence is a design point in the spec, not an asset that hasn't arrived. */}
       {id !== 'terminal' && (
         <div className="vendor-sprite" style={{left: 60, width: 300}}>
-          <ArtSlot label={v.name.toUpperCase()} hint="cutout · PNG alpha · 600×1000" ratio="3 / 5" />
+          <ArtSlot
+            label={v.name.toUpperCase()}
+            hint="cutout · PNG alpha · 600×1000"
+            ratio="3 / 5"
+            src={`/art/vendor-${id}.png`}
+            fit="contain"
+          />
         </div>
       )}
 

@@ -8,6 +8,7 @@ import {addresses, isDeployed} from '@/lib/addresses';
 import {RUNAbi, AUGAbi, StockRunnerAbi} from '@/lib/generated/abis';
 import {fmtCompact, shortAddr, countdown} from '@/lib/format';
 import {Inventory} from './Inventory';
+import {Logo} from './Logo';
 
 /**
  * The persistent operator HUD. Always visible, on the Row and inside every vendor — the machine's
@@ -51,8 +52,8 @@ export function Hud() {
   return (
     <>
       <header className="hud">
-        <Link href="/" className="hud-brand logo" style={{textDecoration: 'none'}}>
-          AUG<span className="slash">//</span>RUN
+        <Link href="/" className="hud-brand" style={{textDecoration: 'none'}}>
+          <Logo height={30} />
         </Link>
 
         {isConnected && !wrongChain && isDeployed && (

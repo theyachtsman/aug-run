@@ -14,14 +14,25 @@ export const DISSOLVE_BLOCK = 32;
 
 export type Rect = {x: number; y: number; w: number; h: number};
 
-/** Where each stall sits on the Runners Row backdrop, in logical pixels. */
+/**
+ * Where each stall sits on the Runners Row backdrop, in logical pixels.
+ *
+ * Measured against the current backdrop: each box spans its sign band down to the floor, and stops
+ * at the pillar between it and its neighbour, so the clickable area matches the shopfront a player
+ * is actually aiming at. The stalls are not equal widths — the Terminal is a narrow wall kiosk and
+ * the Fence has the widest frontage — and forcing them into a uniform grid would put the Terminal's
+ * hotspot over its neighbours' doorways.
+ *
+ * **Retuning:** press `H` on the Row to outline every box over the art. Adjust here and only here;
+ * nothing else hard-codes a stall position.
+ */
 export const ROW_HOTSPOTS: Record<string, Rect> = {
-  market: {x: 40, y: 150, w: 210, h: 380},
-  ripperdoc: {x: 258, y: 170, w: 200, h: 360},
-  terminal: {x: 466, y: 250, w: 130, h: 270},
-  fixer: {x: 604, y: 165, w: 205, h: 365},
-  chopshop: {x: 817, y: 155, w: 210, h: 375},
-  drop: {x: 1035, y: 180, w: 205, h: 350},
+  market: {x: 34, y: 165, w: 222, h: 385},
+  ripperdoc: {x: 284, y: 165, w: 142, h: 385},
+  terminal: {x: 428, y: 165, w: 74, h: 385},
+  fixer: {x: 505, y: 165, w: 240, h: 385},
+  chopshop: {x: 749, y: 165, w: 238, h: 385},
+  drop: {x: 989, y: 165, w: 202, h: 385},
 };
 
 /** Convert a viewport point to logical stage coordinates. */

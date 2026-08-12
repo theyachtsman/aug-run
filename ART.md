@@ -26,19 +26,27 @@ One continuous industrial strip showing **all six stalls side by side**, viewed 
 
 **Critical — stalls must sit inside these regions.** Coordinates are in 1280 × 720 logical pixels;
 double them for the 2× file. A stall's frontage should visually occupy its box so the clickable area
-matches what the eye expects.
+matches what the eye expects. These are measured from the current backdrop and live in one place,
+`site/game/stage.ts` — **hold `H` on the Row to draw every box over the art.**
 
-| Stall | x | y | w | h | 2× region |
-|---|---|---|---|---|---|
-| Black Market (the Fence) | 40 | 150 | 210 | 380 | 80,300 → 500,1060 |
-| Ripperdoc | 258 | 170 | 200 | 360 | 516,340 → 916,1060 |
-| The Terminal (kiosk) | 466 | 250 | 130 | 270 | 932,500 → 1192,1040 |
-| The Fixer | 604 | 165 | 205 | 365 | 1208,330 → 1618,1060 |
-| Chop Shop (the Scrapper) | 817 | 155 | 210 | 375 | 1634,310 → 2054,1060 |
-| The Drop (the Courier) | 1035 | 180 | 205 | 350 | 2070,360 → 2480,1060 |
+The stalls are deliberately *not* equal widths. The Terminal is a narrow wall kiosk; the Fence has
+the widest frontage. Forcing a uniform grid would put the Terminal's hotspot over its neighbours'
+doorways.
+
+| Stall | x | y | w | h | spans x | 2× region |
+|---|---|---|---|---|---|---|
+| Black Market (the Fence) | 34 | 165 | 222 | 385 | 34–256 | 68,330 → 512,1100 |
+| Ripperdoc | 284 | 165 | 142 | 385 | 284–426 | 568,330 → 852,1100 |
+| The Terminal (kiosk) | 428 | 165 | 74 | 385 | 428–502 | 856,330 → 1004,1100 |
+| The Fixer | 505 | 165 | 240 | 385 | 505–745 | 1010,330 → 1490,1100 |
+| Chop Shop (the Scrapper) | 749 | 165 | 238 | 385 | 749–987 | 1498,330 → 1974,1100 |
+| The Drop (the Courier) | 989 | 165 | 202 | 385 | 989–1191 | 1978,330 → 2382,1100 |
+
+Every box runs from the sign band (y 165) down to the floor (y 550), stopping at the pillar between
+it and its neighbour.
 
 Notes:
-- Keep the **top-left ~420 × 130** region visually quiet — the AUG//RUN logo overlays there.
+- Keep the **top-left ~420 × 130** region visually quiet — the AUG//RUN mark overlays there.
 - The **bottom ~150px** is where the dialogue box sits when a vendor speaks. Nothing critical there.
 - The Terminal is an unstaffed **wall-mounted kiosk**, narrower than the others and set back — it
   should read as a machine bolted to the wall, not a shopfront.
