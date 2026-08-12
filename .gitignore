@@ -1,0 +1,31 @@
+# Foundry
+out/
+cache/
+broadcast/
+
+# Secrets — NOTE: this repo lives on a fuseblk mount where chmod does not persist, so every file
+# here is world-readable. Never put a private key in this directory. Keys live in ~/.aug_run/.env
+# (mode 0600). See README.
+.env
+.env.*
+!.env.example
+*.key
+keystore/
+*.mnemonic
+
+# Node / Next / Vite
+node_modules/
+.next/
+next-env.d.ts
+dist/
+.vite/
+*.tsbuildinfo
+
+# Generated from Foundry's out/ by scripts/extract-abis.mjs — run `forge build` then `npm run abis`
+lib/generated/
+src/generated/
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/

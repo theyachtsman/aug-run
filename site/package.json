@@ -1,0 +1,26 @@
+{
+  "name": "augrun-site",
+  "private": true,
+  "version": "0.1.0",
+  "//": "Scripts call node directly: this repo sits under a mount path containing a colon, and PATH is colon-separated, so node_modules/.bin never resolves by name. See README.",
+  "scripts": {
+    "abis": "node scripts/extract-abis.mjs",
+    "dev": "node scripts/extract-abis.mjs && node node_modules/next/dist/bin/next dev -p 3000 -H 0.0.0.0",
+    "build": "node scripts/extract-abis.mjs && node node_modules/next/dist/bin/next build",
+    "start": "node node_modules/next/dist/bin/next start -p 3000 -H 0.0.0.0"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.59.0",
+    "next": "^14.2.15",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "viem": "^2.21.0",
+    "wagmi": "^2.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "typescript": "^5.6.0"
+  }
+}
